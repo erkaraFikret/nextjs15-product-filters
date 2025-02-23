@@ -7,3 +7,5 @@ export default async function getProducts(): Promise<Product[]> {
   const data = await res.json();
   return data;
 }
+
+
