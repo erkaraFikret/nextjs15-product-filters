@@ -9,7 +9,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const ProductFilter = () => {
+interface ProductsFilterProps {
+  refetchProducts: () => Promise<void>;
+}
+
+const ProductFilter = ({ refetchProducts }: ProductsFilterProps) => {
   const [search, setSearch] = useQueryState("search", {
     defaultValue: "",
   });
@@ -17,6 +21,20 @@ const ProductFilter = () => {
     "perPage",
     parseAsInteger.withDefault(10)
   );
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setTimeout(() => {
+      refetchProducts();
+    }, 300);
+  };
+
+  const handlePerPageChange = (value: string) => {
+    setPerPage(Number(value));
+    setTimeout(() => {
+      refetchProducts();
+    }, 300);
+  };
   return (
     <div className="flex justify-between">
       <div>
@@ -24,13 +42,13 @@ const ProductFilter = () => {
           placeholder="Search"
           className="w-full"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
         />
       </div>
       <div>
         <Select
           value={perPage.toString()}
-          onValueChange={(value) => setPerPage(Number(value))}
+          onValueChange={(value) => handlePerPageChange(value)}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Per Page" />

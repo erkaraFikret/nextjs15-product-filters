@@ -1,27 +1,46 @@
-import ProductCard from "@/components/ProductCard";
-import getProducts from "@/server/product";
-import ProductFilter from "@/components/ProductFilter";
+import { getProducts } from "@/server/product";
 import { loadSearchParams } from "@/app/SearchParams";
 import type { SearchParams } from "nuqs/server";
+
+import ProductCard from "@/components/ProductCard";
+import ProductsFilter from "@/components/ProductFilter";
+import { revalidateTag } from "next/cache";
+import ProductsPagination from "@/components/ProductPagination";
 
 type PageProps = {
   searchParams: Promise<SearchParams>;
 };
+
 export default async function Home({ searchParams }: PageProps) {
-  const { search, perPage } = await loadSearchParams(searchParams);
+  const { search, perPage, offset } = await loadSearchParams(searchParams);
+
+  const transformedOffset = (offset - 1) * perPage;
+
   const products = await getProducts({
     search,
     perPage,
+    offset: transformedOffset,
   });
+
+  async function refetchProducts() {
+    "use server";
+
+    revalidateTag("products");
+  }
+
   return (
-    <main className="flex flex-col justify-center gap-10 max-w-6xl mx-auto ">
-      <h1>Awoseme Products</h1>
-      <ProductFilter />
+    <main className="flex flex-col gap-10 justify-center max-w-6xl mx-auto p-10">
+      <h1>Awesome Products</h1>
+
+      <ProductsFilter refetchProducts={refetchProducts} />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
+
+      <ProductsPagination refetchProducts={refetchProducts} />
     </main>
   );
 }
